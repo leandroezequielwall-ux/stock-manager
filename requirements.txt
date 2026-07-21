@@ -1,0 +1,7 @@
+Flask==3.1.1
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+openpyxl==3.1.5
+python-dotenv
+Flask-Migrate
+psycopg2
