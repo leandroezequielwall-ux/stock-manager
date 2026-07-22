@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Productos — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1><i class="bi bi-box-seam text-accent-blue"></i> Productos</h1>
+        <p class="subtitle">{{ productos.total }} producto{{ 's' if productos.total != 1 else '' }} en el inventario</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('api_bp.api_exportar') }}" class="btn-outline-custom" target="_blank" download="inventario.xlsx">
+            <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+        </a>
+        <a href="{{ url_for('productos_bp.producto_nuevo') }}" class="btn-primary-custom">
+            <i class="bi bi-plus-lg"></i> Nuevo Producto
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card-glass mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ url_for('productos_bp.productos_lista') }}">
+            <div class="search-container">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="q" class="form-control form-control-custom"
+                       placeholder="Buscar por código, código de barras, nombre, marca o proveedor..."
+                       value="{{ busqueda }}" autocomplete="off">
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if busqueda %}
+<div class="alert-custom info mb-3">
+    <i class="bi bi-funnel-fill"></i>
+    Mostrando resultados para: <strong>"{{ busqueda }}"</strong>
+    <a href="{{ url_for('productos_bp.productos_lista') }}" class="ms-2 text-decoration-none" style="color: var(--accent-blue);">
+        <i class="bi bi-x-lg"></i> Limpiar
+    </a>
+</div>
+{% endif %}
+
+<!-- Products Table -->
+<div class="card-glass">
+    <div class="card-body p-0">
+        {% if productos.items %}
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom" id="tabla-productos">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Marca</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-center">Stock</th>
+                        <th>Ubicación</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos.items %}
+                    <tr class="{% if p.stock <= 0 %}stock-critico{% elif p.stock <= p.stock_minimo %}stock-bajo{% endif %}">
+                        <td><strong>{{ p.codigo }}</strong></td>
+                        <td>
+                            {{ p.nombre }}
+                            {% if p.estado == 'inactivo' %}
+                                <span class="stock-badge critico" style="font-size: 0.7em; padding: 1px 6px;">Inactivo</span>
+                            {% elif p.estado == 'descontinuado' %}
+                                <span class="stock-badge sin-stock" style="font-size: 0.7em; padding: 1px 6px;">Descont.</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted-custom">{{ p.marca or '—' }}</td>
+                        <td>{{ p.categoria.nombre if p.categoria else '—' }}</td>
+                        <td class="text-muted-custom">{{ p.proveedor or '—' }}</td>
+                        <td class="text-end text-accent-green fw-600">${{ "{:,.0f}".format(p.precio) }}</td>
+                        <td class="text-center">
+                            {% if p.stock <= 0 %}
+                                <span class="stock-badge sin-stock">
+                                    <i class="bi bi-x-circle-fill"></i> 0
+                                </span>
+                            {% elif p.stock <= p.stock_minimo %}
+                                <span class="stock-badge critico">
+                                    <i class="bi bi-exclamation-circle-fill"></i> {{ p.stock }}
+                                </span>
+                            {% else %}
+                                <span class="stock-badge ok">
+                                    <i class="bi bi-check-circle-fill"></i> {{ p.stock }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted-custom">{{ p.ubicacion or '—' }}</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="{{ url_for('productos_bp.producto_detalle', id=p.id) }}"
+                                   class="btn-outline-custom btn-sm-custom" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('productos_bp.producto_editar', id=p.id) }}"
+                                   class="btn-outline-custom btn-sm-custom" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if productos.pages > 1 %}
+        <div class="d-flex justify-content-center p-3">
+            <nav>
+                <ul class="pagination pagination-custom mb-0">
+                    <li class="page-item {% if not productos.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('productos_bp.productos_lista', page=productos.prev_num, q=busqueda) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% for page_num in productos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == productos.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('productos_bp.productos_lista', page=page_num, q=busqueda) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not productos.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('productos_bp.productos_lista', page=productos.next_num, q=busqueda) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-search"></i></div>
+            <div class="empty-title">
+                {% if busqueda %}
+                    No se encontraron productos
+                {% else %}
+                    No hay productos cargados
+                {% endif %}
+            </div>
+            <div class="empty-text">
+                {% if busqueda %}
+                    Probá con otro término de búsqueda.
+                {% else %}
+                    Comenzá agregando tu primer producto al inventario.
+                {% endif %}
+            </div>
+            {% if not busqueda %}
+            <a href="{{ url_for('productos_bp.producto_nuevo') }}" class="btn-primary-custom mt-3">
+                <i class="bi bi-plus-lg"></i> Agregar Producto
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

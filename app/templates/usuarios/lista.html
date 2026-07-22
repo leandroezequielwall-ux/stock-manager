@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Usuarios — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1><i class="bi bi-people text-accent-blue"></i> Usuarios</h1>
+        <p class="subtitle">Gestión de usuarios del sistema</p>
+    </div>
+    <a href="{{ url_for('usuarios_bp.usuario_nuevo') }}" class="btn-primary-custom">
+        <i class="bi bi-person-plus"></i> Nuevo Usuario
+    </a>
+</div>
+
+<div class="card-glass">
+    <div class="card-body p-0">
+        {% if usuarios %}
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>
+                            <strong>{{ u.nombre }}</strong>
+                            {% if u.id == current_user.id %}
+                                <span class="stock-badge ok" style="margin-left: 0.5rem;">Vos</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted-custom">{{ u.email }}</td>
+                        <td>
+                            {% if u.es_admin %}
+                                <span class="mov-badge entrada">
+                                    <i class="bi bi-shield-check"></i> Admin
+                                </span>
+                            {% else %}
+                                <span class="mov-badge salida">
+                                    <i class="bi bi-person"></i> Operador
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.activo %}
+                                <span class="stock-badge ok">
+                                    <i class="bi bi-check-circle-fill"></i> Activo
+                                </span>
+                            {% else %}
+                                <span class="stock-badge critico">
+                                    <i class="bi bi-x-circle-fill"></i> Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted-custom">{{ u.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <div class="action-btns">
+                                <a href="{{ url_for('usuarios_bp.usuario_editar', id=u.id) }}"
+                                   class="btn-outline-custom btn-sm-custom" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if u.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('usuarios_bp.usuario_eliminar', id=u.id) }}"
+                                      onsubmit="return confirm('¿Eliminar usuario {{ u.nombre }}?');"
+                                      class="d-inline">
+                                    <button type="submit" class="btn-danger-custom btn-sm-custom" title="Eliminar">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-people"></i></div>
+            <div class="empty-title">Sin usuarios</div>
+            <div class="empty-text">No hay usuarios registrados en el sistema.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

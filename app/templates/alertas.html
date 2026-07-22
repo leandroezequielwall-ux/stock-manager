@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Alertas de Stock — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-exclamation-triangle text-accent-red"></i> Alertas de Stock</h1>
+    <p class="subtitle">{{ total }} producto{{ 's' if total != 1 else '' }} requieren atención</p>
+</div>
+
+{% if total == 0 %}
+<div class="card-glass">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-check-circle" style="color: var(--accent-green);"></i></div>
+            <div class="empty-title">¡Todo en orden!</div>
+            <div class="empty-text">Todos los productos tienen stock por encima del mínimo.</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Sin Stock -->
+{% if sin_stock %}
+<div class="card-glass mb-4">
+    <div class="card-body">
+        <div class="section-title">
+            <i class="bi bi-x-circle-fill text-accent-red"></i>
+            Sin Stock ({{ sin_stock|length }})
+        </div>
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Mínimo</th>
+                        <th>Ubicación</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in sin_stock %}
+                    <tr class="stock-critico">
+                        <td><strong>{{ p.codigo }}</strong></td>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.categoria.nombre if p.categoria else '—' }}</td>
+                        <td class="text-muted-custom">{{ p.proveedor or '—' }}</td>
+                        <td class="text-center">
+                            <span class="stock-badge sin-stock">
+                                <i class="bi bi-x-circle-fill"></i> 0
+                            </span>
+                        </td>
+                        <td class="text-center text-muted-custom">{{ p.stock_minimo }}</td>
+                        <td class="text-muted-custom">{{ p.ubicacion or '—' }}</td>
+                        <td>
+                            <a href="{{ url_for('productos_bp.producto_detalle', id=p.id) }}"
+                               class="btn-outline-custom btn-sm-custom" title="Ver / Reponer">
+                                <i class="bi bi-arrow-down-circle"></i> Reponer
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stock Bajo -->
+{% if stock_bajo %}
+<div class="card-glass">
+    <div class="card-body">
+        <div class="section-title">
+            <i class="bi bi-exclamation-circle-fill text-accent-yellow"></i>
+            Stock Bajo ({{ stock_bajo|length }})
+        </div>
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Mínimo</th>
+                        <th>Ubicación</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in stock_bajo %}
+                    <tr class="stock-bajo">
+                        <td><strong>{{ p.codigo }}</strong></td>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.categoria.nombre if p.categoria else '—' }}</td>
+                        <td class="text-muted-custom">{{ p.proveedor or '—' }}</td>
+                        <td class="text-center">
+                            <span class="stock-badge critico">
+                                <i class="bi bi-exclamation-circle-fill"></i> {{ p.stock }}
+                            </span>
+                        </td>
+                        <td class="text-center text-muted-custom">{{ p.stock_minimo }}</td>
+                        <td class="text-muted-custom">{{ p.ubicacion or '—' }}</td>
+                        <td>
+                            <a href="{{ url_for('productos_bp.producto_detalle', id=p.id) }}"
+                               class="btn-outline-custom btn-sm-custom" title="Ver detalle">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

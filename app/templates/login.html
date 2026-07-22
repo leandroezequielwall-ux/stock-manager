@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — Stock Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -150px;
+            right: -150px;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.06), transparent 70%);
+        }
+
+        .login-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(94, 234, 212, 0.04), transparent 70%);
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header .brand-logo {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .login-form .form-control-custom {
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card fade-in">
+            <div class="login-header">
+                <div class="brand-logo">
+                    <i class="bi bi-gear-wide-connected"></i>
+                </div>
+                <h1>Stock Manager</h1>
+                <p>Sistema de Gestión de Stock</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert-custom {{ category }} mb-3" role="alert">
+                            {% if category == 'danger' %}
+                                <i class="bi bi-x-circle-fill"></i>
+                            {% elif category == 'info' %}
+                                <i class="bi bi-info-circle-fill"></i>
+                            {% else %}
+                                <i class="bi bi-check-circle-fill"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card-glass">
+                <div class="card-body p-4">
+                    <form method="POST" class="login-form" id="login-form">
+                        <div class="mb-3">
+                            <label class="form-label-custom" for="email">Usuario / Email</label>
+                            <div class="search-container">
+                                <i class="bi bi-person search-icon"></i>
+                                <input type="text" id="email" name="email"
+                                       class="form-control form-control-custom"
+                                       placeholder="Ingresá tu usuario"
+                                       required autofocus autocomplete="username">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom" for="password">Contraseña</label>
+                            <div class="search-container">
+                                <i class="bi bi-lock search-icon"></i>
+                                <input type="password" id="password" name="password"
+                                       class="form-control form-control-custom"
+                                       placeholder="Ingresá tu contraseña"
+                                       required autocomplete="current-password">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-custom login-btn">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <i class="bi bi-shield-lock"></i> Acceso restringido a usuarios autorizados
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

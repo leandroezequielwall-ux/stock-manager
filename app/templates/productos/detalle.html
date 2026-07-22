@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}{{ producto.codigo }} — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1>
+            <i class="bi bi-box-seam text-accent-blue"></i>
+            {{ producto.codigo }}
+            {% if producto.estado != 'activo' %}
+                <span class="stock-badge {% if producto.estado == 'inactivo' %}critico{% else %}sin-stock{% endif %}" style="font-size: 0.55em; vertical-align: middle;">
+                    {{ producto.estado|capitalize }}
+                </span>
+            {% endif %}
+        </h1>
+        <p class="subtitle">{{ producto.nombre }}{% if producto.categoria %} — {{ producto.categoria.nombre }}{% endif %}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('productos_bp.producto_editar', id=producto.id) }}" class="btn-primary-custom">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        {% if current_user.es_admin %}
+        <button type="button" class="btn-danger-custom" data-bs-toggle="modal" data-bs-target="#modalEliminar">
+            <i class="bi bi-trash3"></i> Eliminar
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Product Info -->
+<div class="card-glass mb-4">
+    <div class="card-body">
+        <div class="section-title">
+            <i class="bi bi-info-circle"></i> Información del Producto
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Código</div>
+                <div class="info-value"><strong>{{ producto.codigo }}</strong></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Código de Barras</div>
+                <div class="info-value">{{ producto.codigo_barras or '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Nombre</div>
+                <div class="info-value">{{ producto.nombre }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Descripción</div>
+                <div class="info-value">{{ producto.descripcion or '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Marca</div>
+                <div class="info-value">{{ producto.marca or '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Categoría</div>
+                <div class="info-value">{{ producto.categoria.nombre if producto.categoria else '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Subcategoría</div>
+                <div class="info-value">{{ producto.subcategoria.nombre if producto.subcategoria else '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Proveedor</div>
+                <div class="info-value">{{ producto.proveedor or '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Costo</div>
+                <div class="info-value">${{ "{:,.0f}".format(producto.costo) }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Precio Venta</div>
+                <div class="info-value price">${{ "{:,.0f}".format(producto.precio) }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Ganancia</div>
+                <div class="info-value" style="color: {% if producto.ganancia > 0 %}var(--accent-green){% elif producto.ganancia < 0 %}var(--accent-red){% else %}var(--text-muted){% endif %};">
+                    ${{ "{:,.0f}".format(producto.ganancia) }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Stock Actual</div>
+                <div class="info-value">
+                    {% if producto.stock <= 0 %}
+                        <span class="stock-badge sin-stock"><i class="bi bi-x-circle-fill"></i> Sin stock</span>
+                    {% elif producto.stock <= producto.stock_minimo %}
+                        <span class="stock-badge critico"><i class="bi bi-exclamation-circle-fill"></i> {{ producto.stock }}</span>
+                    {% else %}
+                        <span class="stock-badge ok"><i class="bi bi-check-circle-fill"></i> {{ producto.stock }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Stock Mínimo</div>
+                <div class="info-value">{{ producto.stock_minimo }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Ubicación</div>
+                <div class="info-value">{{ producto.ubicacion or '—' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Estado</div>
+                <div class="info-value">
+                    {% if producto.estado == 'activo' %}
+                        <span style="color: var(--accent-green);"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                    {% elif producto.estado == 'inactivo' %}
+                        <span style="color: var(--accent-yellow);"><i class="bi bi-pause-circle-fill"></i> Inactivo</span>
+                    {% else %}
+                        <span style="color: var(--accent-red);"><i class="bi bi-x-circle-fill"></i> Descontinuado</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Fecha de Alta</div>
+                <div class="info-value">{{ producto.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</div>
+            </div>
+        </div>
+
+        {% if producto.observaciones %}
+        <div class="mt-3">
+            <div class="info-label">Observaciones</div>
+            <div class="info-value" style="color: var(--text-secondary);">{{ producto.observaciones }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stock Movement Forms -->
+<div class="row g-4 mb-4">
+    <!-- Entrada -->
+    <div class="col-md-6">
+        <div class="movement-form">
+            <div class="section-title">
+                <i class="bi bi-arrow-down-circle-fill text-accent-green"></i> Registrar Entrada
+            </div>
+            <form method="POST" action="{{ url_for('movimientos_bp.stock_entrada', id=producto.id) }}">
+                <div class="row g-2">
+                    <div class="col-4">
+                        <input type="number" name="cantidad" class="form-control form-control-custom"
+                               placeholder="Cant." min="1" required>
+                    </div>
+                    <div class="col-8">
+                        <input type="text" name="motivo" class="form-control form-control-custom"
+                               placeholder="Motivo (ej: Compra proveedor)" value="Entrada de mercadería">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn-success-custom w-100 mt-1">
+                            <i class="bi bi-plus-circle"></i> Ingresar Stock
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Salida -->
+    <div class="col-md-6">
+        <div class="movement-form">
+            <div class="section-title">
+                <i class="bi bi-arrow-up-circle-fill text-accent-orange"></i> Registrar Salida / Venta
+            </div>
+            <form method="POST" action="{{ url_for('movimientos_bp.stock_salida', id=producto.id) }}">
+                <div class="row g-2">
+                    <div class="col-4">
+                        <input type="number" name="cantidad" class="form-control form-control-custom"
+                               placeholder="Cant." min="1" max="{{ producto.stock }}" required>
+                    </div>
+                    <div class="col-8">
+                        <input type="text" name="motivo" class="form-control form-control-custom"
+                               placeholder="Motivo (ej: Venta mostrador)" value="Venta">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn-warning-custom w-100 mt-1"
+                                {% if producto.stock <= 0 %}disabled{% endif %}>
+                            <i class="bi bi-dash-circle"></i> Descontar Stock
+                            {% if producto.stock <= 0 %}(Sin stock){% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Movement History -->
+<div class="card-glass">
+    <div class="card-body">
+        <div class="section-title">
+            <i class="bi bi-clock-history"></i> Historial de Movimientos
+        </div>
+
+        {% if movimientos %}
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos %}
+                    <tr>
+                        <td class="text-muted-custom">{{ m.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <span class="mov-badge {{ m.tipo|lower }}">
+                                {% if m.tipo == 'ENTRADA' %}
+                                    <i class="bi bi-arrow-down-circle-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-arrow-up-circle-fill"></i>
+                                {% endif %}
+                                {{ m.tipo }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <strong>
+                                {% if m.tipo == 'ENTRADA' %}
+                                    <span class="text-accent-green">+{{ m.cantidad }}</span>
+                                {% else %}
+                                    <span class="text-accent-orange">-{{ m.cantidad }}</span>
+                                {% endif %}
+                            </strong>
+                        </td>
+                        <td>{{ m.motivo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+            <div class="empty-title">Sin movimientos</div>
+            <div class="empty-text">Este producto no tiene movimientos registrados.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-accent-red">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que querés eliminar el producto <strong>{{ producto.codigo }}</strong>?</p>
+                <p class="text-muted-custom mb-0">
+                    Esta acción eliminará el producto y todo su historial de movimientos. No se puede deshacer.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline-custom" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('productos_bp.producto_eliminar', id=producto.id) }}" class="d-inline">
+                    <button type="submit" class="btn-danger-custom">
+                        <i class="bi bi-trash3"></i> Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

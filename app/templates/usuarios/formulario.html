@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ accion }} Usuario — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="bi bi-{% if accion == 'Nuevo' %}person-plus{% else %}pencil-square{% endif %} text-accent-blue"></i>
+        {{ accion }} Usuario
+    </h1>
+    <p class="subtitle">
+        {% if accion == 'Nuevo' %}
+            Completá los datos para crear un nuevo usuario.
+        {% else %}
+            Editando usuario <strong>{{ usuario.nombre }}</strong>.
+        {% endif %}
+    </p>
+</div>
+
+<div class="card-glass" style="max-width: 650px;">
+    <div class="card-body">
+        <form method="POST" id="form-usuario">
+            <div class="row g-3">
+                <!-- Nombre -->
+                <div class="col-12">
+                    <label class="form-label-custom" for="nombre">Nombre Completo *</label>
+                    <input type="text" id="nombre" name="nombre"
+                           class="form-control form-control-custom"
+                           value="{{ usuario.nombre if usuario else '' }}"
+                           placeholder="Ej: Juan Pérez" required>
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+                    <label class="form-label-custom" for="email">Email / Usuario *</label>
+                    <input type="text" id="email" name="email"
+                           class="form-control form-control-custom"
+                           value="{{ usuario.email if usuario else '' }}"
+                           placeholder="Ej: juan@email.com" required>
+                </div>
+
+                <!-- Rol -->
+                <div class="col-md-6">
+                    <label class="form-label-custom" for="rol">Rol *</label>
+                    <select id="rol" name="rol" class="form-control form-select-custom">
+                        <option value="operador" {% if usuario and usuario.rol == 'operador' %}selected{% endif %}>
+                            Operador — Puede ver y mover stock
+                        </option>
+                        <option value="admin" {% if usuario and usuario.rol == 'admin' %}selected{% endif %}>
+                            Admin — Acceso total
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-12"><hr style="border-color: var(--border-color); opacity: 0.5;"></div>
+
+                <!-- Contraseña -->
+                <div class="col-md-6">
+                    <label class="form-label-custom" for="password">
+                        Contraseña {% if accion == 'Nuevo' %}*{% else %}(dejar vacío para no cambiar){% endif %}
+                    </label>
+                    <input type="password" id="password" name="password"
+                           class="form-control form-control-custom"
+                           placeholder="Mínimo 4 caracteres"
+                           {% if accion == 'Nuevo' %}required{% endif %}
+                           minlength="4">
+                </div>
+
+                <!-- Activo -->
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check form-switch" style="padding-bottom: 0.7rem;">
+                        <input class="form-check-input" type="checkbox" id="activo" name="activo"
+                               {% if not usuario or usuario.activo %}checked{% endif %}
+                               style="cursor: pointer;">
+                        <label class="form-check-label" for="activo" style="color: var(--text-secondary); cursor: pointer;">
+                            Usuario activo (puede iniciar sesión)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info box for roles -->
+            <div class="alert-custom info mt-4" style="animation: none;">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Roles:</strong>
+                    <strong>Admin</strong> = acceso total (productos, usuarios, eliminar).
+                    <strong>Operador</strong> = ver productos, registrar entradas y salidas.
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+                <button type="submit" class="btn-primary-custom">
+                    <i class="bi bi-check-lg"></i>
+                    {% if accion == 'Nuevo' %}Crear Usuario{% else %}Guardar Cambios{% endif %}
+                </button>
+                <a href="{{ url_for('usuarios_bp.usuarios_lista') }}" class="btn-outline-custom">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

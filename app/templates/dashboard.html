@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2 text-accent-blue"></i> Dashboard</h1>
+    <p class="subtitle">Resumen general del inventario</p>
+</div>
+
+<!-- Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card-glass metric-card blue-glow">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="metric-icon blue">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div>
+                        <div class="metric-value">{{ total_productos }}</div>
+                    </div>
+                </div>
+                <div class="metric-label">Productos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card-glass metric-card green-glow">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="metric-icon green">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div>
+                        <div class="metric-value">${{ "{:,.0f}".format(valor_total) }}</div>
+                    </div>
+                </div>
+                <div class="metric-label">Valor Inventario</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card-glass metric-card red-glow">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="metric-icon red">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <div class="metric-value">{{ productos_bajo_stock }}</div>
+                    </div>
+                </div>
+                <div class="metric-label">Stock Bajo</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card-glass metric-card orange-glow">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="metric-icon orange">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <div>
+                        <div class="metric-value">{{ movimientos_hoy }}</div>
+                    </div>
+                </div>
+                <div class="metric-label">Movimientos Hoy</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Critical Stock Table -->
+    <div class="col-lg-7">
+        <div class="card-glass">
+            <div class="card-body">
+                <div class="section-title">
+                    <i class="bi bi-exclamation-triangle-fill text-accent-red"></i>
+                    Productos con Stock Crítico
+                </div>
+
+                {% if productos_criticos %}
+                <div class="table-responsive-custom">
+                    <table class="table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Stock</th>
+                                <th>Mín.</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_criticos %}
+                            <tr class="{% if p.stock <= 0 %}stock-critico{% else %}stock-bajo{% endif %}">
+                                <td><strong>{{ p.codigo }}</strong></td>
+                                <td>{{ p.nombre }}</td>
+                                <td>
+                                    {% if p.stock <= 0 %}
+                                        <span class="stock-badge sin-stock">
+                                            <i class="bi bi-x-circle-fill"></i> Sin stock
+                                        </span>
+                                    {% else %}
+                                        <span class="stock-badge critico">
+                                            <i class="bi bi-exclamation-circle-fill"></i> {{ p.stock }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted-custom">{{ p.stock_minimo }}</td>
+                                <td>
+                                    <a href="{{ url_for('productos_bp.producto_detalle', id=p.id) }}"
+                                       class="btn-outline-custom btn-sm-custom">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-check-circle"></i></div>
+                    <div class="empty-title">¡Todo en orden!</div>
+                    <div class="empty-text">No hay productos con stock crítico.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Movements -->
+    <div class="col-lg-5">
+        <div class="card-glass">
+            <div class="card-body">
+                <div class="section-title">
+                    <i class="bi bi-clock-history text-accent-blue"></i>
+                    Últimos Movimientos
+                </div>
+
+                {% if ultimos_movimientos %}
+                <div class="table-responsive-custom">
+                    <table class="table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in ultimos_movimientos %}
+                            <tr>
+                                <td>
+                                    <span class="mov-badge {{ m.tipo|lower }}">
+                                        {% if m.tipo == 'ENTRADA' %}
+                                            <i class="bi bi-arrow-down-circle-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-arrow-up-circle-fill"></i>
+                                        {% endif %}
+                                        {{ m.tipo }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('productos_bp.producto_detalle', id=m.producto_id) }}"
+                                       class="text-decoration-none text-accent-blue">
+                                        {{ m.producto.codigo }}
+                                    </a>
+                                </td>
+                                <td>{{ m.cantidad }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-end">
+                    <a href="{{ url_for('movimientos_bp.movimientos_lista') }}" class="btn-outline-custom btn-sm-custom">
+                        Ver todos <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                    <div class="empty-title">Sin movimientos</div>
+                    <div class="empty-text">Todavía no se registraron movimientos.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

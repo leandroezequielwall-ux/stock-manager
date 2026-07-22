@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ accion }} Subcategoría — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-header">
+            <h1>
+                <i class="bi bi-{% if accion == 'Nueva' %}file-earmark-plus{% else %}pencil-square{% endif %} text-accent-blue"></i>
+                {{ accion }} Subcategoría
+            </h1>
+            <p class="subtitle">
+                {% if accion == 'Nueva' %}
+                    Creá una nueva subcategoría dentro de una categoría existente.
+                {% else %}
+                    Modificando la subcategoría <strong>{{ subcategoria.nombre }}</strong>.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card-glass">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="categoria_id">Categoría Padre *</label>
+                        <select id="categoria_id" name="categoria_id" class="form-control form-select-custom" required>
+                            <option value="">— Seleccionar Categoría —</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat.id }}"
+                                    {% if subcategoria and subcategoria.categoria_id == cat.id %}selected{% endif %}>
+                                {{ cat.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label-custom" for="nombre">Nombre de la Subcategoría *</label>
+                        <input type="text" id="nombre" name="nombre"
+                               class="form-control form-control-custom"
+                               value="{{ subcategoria.nombre if subcategoria else '' }}"
+                               placeholder="Ej: Manuales, Cables, Pintura Látex" required
+                               {% if accion == 'Nueva' %}autofocus{% endif %}>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-primary-custom w-100">
+                            <i class="bi bi-check-lg"></i> Guardar
+                        </button>
+                        <a href="{{ url_for('categorias_bp.categorias_lista') }}" class="btn-outline-custom w-100 text-center">
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

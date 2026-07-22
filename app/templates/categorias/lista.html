@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Categorías y Subcategorías — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1><i class="bi bi-tags text-accent-blue"></i> Categorías y Subcategorías</h1>
+        <p class="subtitle">Gestioná la clasificación de tus productos.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('categorias_bp.categoria_nueva') }}" class="btn-primary-custom">
+            <i class="bi bi-folder-plus"></i> Nueva Categoría
+        </a>
+        <a href="{{ url_for('categorias_bp.subcategoria_nueva') }}" class="btn-outline-custom">
+            <i class="bi bi-file-earmark-plus"></i> Nueva Subcategoría
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for cat in categorias %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card-glass h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title text-accent-blue fw-600 mb-0">
+                        <i class="bi bi-folder2-open"></i> {{ cat.nombre }}
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{{ url_for('categorias_bp.categoria_editar', id=cat.id) }}"><i class="bi bi-pencil me-2"></i>Editar Categoría</a></li>
+                            <li>
+                                <form action="{{ url_for('categorias_bp.categoria_eliminar', id=cat.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que querés eliminar la categoría {{ cat.nombre }}?');">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Eliminar Categoría</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if cat.descripcion %}
+                <p class="text-muted-custom small mb-3">{{ cat.descripcion }}</p>
+                {% endif %}
+
+                <div class="section-title" style="font-size: 0.9em; margin-bottom: 0.5rem;">
+                    <i class="bi bi-diagram-2"></i> Subcategorías ({{ cat.subcategorias.count() }})
+                </div>
+                
+                {% if cat.subcategorias.count() > 0 %}
+                <ul class="list-group list-group-flush bg-transparent">
+                    {% for sub in cat.subcategorias.order_by('nombre').all() %}
+                    <li class="list-group-item bg-transparent border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-arrow-return-right text-muted-custom me-2"></i>{{ sub.nombre }}</span>
+                        <div class="action-btns">
+                            <a href="{{ url_for('categorias_bp.subcategoria_editar', id=sub.id) }}" class="btn-outline-custom btn-sm-custom py-0 px-1 border-0" title="Editar"><i class="bi bi-pencil small"></i></a>
+                            <form action="{{ url_for('categorias_bp.subcategoria_eliminar', id=sub.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que querés eliminar la subcategoría {{ sub.nombre }}?');">
+                                <button type="submit" class="btn-outline-custom btn-sm-custom py-0 px-1 border-0 text-accent-red" title="Eliminar"><i class="bi bi-trash small"></i></button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted-custom small fst-italic">Sin subcategorías.</p>
+                {% endif %}
+                
+                <div class="mt-3 text-end">
+                    <span class="badge bg-secondary">{{ cat.productos.count() }} producto(s)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-tags"></i></div>
+            <div class="empty-title">No hay categorías</div>
+            <div class="empty-text">Comenzá creando la primera categoría para organizar tus productos.</div>
+            <a href="{{ url_for('categorias_bp.categoria_nueva') }}" class="btn-primary-custom mt-3">
+                <i class="bi bi-folder-plus"></i> Crear Categoría
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

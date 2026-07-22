@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}{{ accion }} Producto — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="bi bi-{% if accion == 'Nuevo' %}plus-circle{% else %}pencil-square{% endif %} text-accent-blue"></i>
+        {{ accion }} Producto
+    </h1>
+    <p class="subtitle">
+        {% if accion == 'Nuevo' %}
+            Completá los datos para agregar un nuevo producto al inventario.
+        {% else %}
+            Editando producto <strong>{{ producto.codigo }}</strong>.
+        {% endif %}
+    </p>
+</div>
+
+<div class="card-glass">
+    <div class="card-body">
+        <form method="POST" id="form-producto">
+            <div class="row g-3">
+                <!-- ═══ Identificación ═══ -->
+                <div class="col-12">
+                    <div class="section-title" style="margin-bottom: 0;">
+                        <i class="bi bi-upc-scan"></i> Identificación
+                    </div>
+                </div>
+
+                <!-- Código -->
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label-custom" for="codigo">Código *</label>
+                    <input type="text" id="codigo" name="codigo"
+                           class="form-control form-control-custom"
+                           value="{{ producto.codigo if producto else '' }}"
+                           placeholder="Ej: PROD-001" required
+                           style="text-transform: uppercase;">
+                </div>
+
+                <!-- Código de Barras -->
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label-custom" for="codigo_barras">Código de Barras</label>
+                    <input type="text" id="codigo_barras" name="codigo_barras"
+                           class="form-control form-control-custom"
+                           value="{{ producto.codigo_barras if producto and producto.codigo_barras else '' }}"
+                           placeholder="Ej: 7790001234567">
+                </div>
+
+                <!-- Nombre -->
+                <div class="col-md-8 col-lg-6">
+                    <label class="form-label-custom" for="nombre">Nombre del Producto *</label>
+                    <input type="text" id="nombre" name="nombre"
+                           class="form-control form-control-custom"
+                           value="{{ producto.nombre if producto else '' }}"
+                           placeholder="Ej: Taladro Percutor 13mm" required>
+                </div>
+
+                <!-- Marca -->
+                <div class="col-md-4 col-lg-3">
+                    <label class="form-label-custom" for="marca">Marca</label>
+                    <input type="text" id="marca" name="marca"
+                           class="form-control form-control-custom"
+                           value="{{ producto.marca if producto else '' }}"
+                           placeholder="Ej: Bosch, Samsung">
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-md-8 col-lg-5">
+                    <label class="form-label-custom" for="descripcion">Descripción</label>
+                    <input type="text" id="descripcion" name="descripcion"
+                           class="form-control form-control-custom"
+                           value="{{ producto.descripcion if producto else '' }}"
+                           placeholder="Detalles adicionales del producto">
+                </div>
+
+                <!-- Estado -->
+                <div class="col-md-4 col-lg-4">
+                    <label class="form-label-custom" for="estado">Estado</label>
+                    <select id="estado" name="estado" class="form-control form-select-custom">
+                        <option value="activo" {% if not producto or producto.estado == 'activo' %}selected{% endif %}>
+                            ✅ Activo
+                        </option>
+                        <option value="inactivo" {% if producto and producto.estado == 'inactivo' %}selected{% endif %}>
+                            ⏸️ Inactivo
+                        </option>
+                        <option value="descontinuado" {% if producto and producto.estado == 'descontinuado' %}selected{% endif %}>
+                            ⛔ Descontinuado
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-12"><hr style="border-color: var(--border-color); opacity: 0.5;"></div>
+
+                <!-- ═══ Clasificación ═══ -->
+                <div class="col-12">
+                    <div class="section-title" style="margin-bottom: 0;">
+                        <i class="bi bi-tags"></i> Clasificación
+                    </div>
+                </div>
+
+                <!-- Categoría -->
+                <div class="col-md-4 col-lg-4">
+                    <label class="form-label-custom" for="categoria_id">Categoría</label>
+                    <select id="categoria_id" name="categoria_id"
+                            class="form-control form-select-custom">
+                        <option value="">— Sin categoría —</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}"
+                                {% if producto and producto.categoria_id == cat.id %}selected{% endif %}>
+                            {{ cat.nombre }}
+                        </option>
+                        {% endfor %}
+                        <option value="nueva">+ Nueva categoría...</option>
+                    </select>
+                </div>
+
+                <!-- Nueva Categoría (hidden) -->
+                <div class="col-md-4 col-lg-4" id="nueva-categoria-container" style="display: none;">
+                    <label class="form-label-custom" for="nueva_categoria">Nueva Categoría</label>
+                    <input type="text" id="nueva_categoria" name="nueva_categoria"
+                           class="form-control form-control-custom"
+                           placeholder="Nombre de la nueva categoría">
+                </div>
+
+                <!-- Subcategoría -->
+                <div class="col-md-4 col-lg-4">
+                    <label class="form-label-custom" for="subcategoria_id">Subcategoría</label>
+                    <select id="subcategoria_id" name="subcategoria_id"
+                            class="form-control form-select-custom">
+                        <option value="">— Sin subcategoría —</option>
+                        {% if producto and producto.categoria_id %}
+                            {% for sub in subcategorias %}
+                            {% if sub.categoria_id == producto.categoria_id %}
+                            <option value="{{ sub.id }}"
+                                    {% if producto.subcategoria_id == sub.id %}selected{% endif %}>
+                                {{ sub.nombre }}
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        <option value="nueva">+ Nueva subcategoría...</option>
+                    </select>
+                </div>
+
+                <!-- Nueva Subcategoría (hidden) -->
+                <div class="col-md-4 col-lg-4" id="nueva-subcategoria-container" style="display: none;">
+                    <label class="form-label-custom" for="nueva_subcategoria">Nueva Subcategoría</label>
+                    <input type="text" id="nueva_subcategoria" name="nueva_subcategoria"
+                           class="form-control form-control-custom"
+                           placeholder="Nombre de la nueva subcategoría">
+                </div>
+
+                <!-- Proveedor -->
+                <div class="col-md-4 col-lg-4">
+                    <label class="form-label-custom" for="proveedor">Proveedor</label>
+                    <input type="text" id="proveedor" name="proveedor"
+                           class="form-control form-control-custom"
+                           value="{{ producto.proveedor if producto else '' }}"
+                           placeholder="Ej: Distribuidora Norte">
+                </div>
+
+                <div class="col-12"><hr style="border-color: var(--border-color); opacity: 0.5;"></div>
+
+                <!-- ═══ Precios y Stock ═══ -->
+                <div class="col-12">
+                    <div class="section-title" style="margin-bottom: 0;">
+                        <i class="bi bi-currency-dollar"></i> Precios y Stock
+                    </div>
+                </div>
+
+                <!-- Costo -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label-custom" for="costo">Costo ($)</label>
+                    <input type="number" id="costo" name="costo"
+                           class="form-control form-control-custom"
+                           value="{{ producto.costo if producto else '' }}"
+                           placeholder="0" min="0" step="0.01">
+                </div>
+
+                <!-- Precio -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label-custom" for="precio">Precio Venta ($)</label>
+                    <input type="number" id="precio" name="precio"
+                           class="form-control form-control-custom"
+                           value="{{ producto.precio if producto else '' }}"
+                           placeholder="0" min="0" step="0.01">
+                </div>
+
+                <!-- Stock (only on create) -->
+                {% if accion == 'Nuevo' %}
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label-custom" for="stock">Stock Inicial</label>
+                    <input type="number" id="stock" name="stock"
+                           class="form-control form-control-custom"
+                           value="0" min="0">
+                </div>
+                {% endif %}
+
+                <!-- Stock Mínimo -->
+                <div class="col-md-4 col-lg-2">
+                    <label class="form-label-custom" for="stock_minimo">Stock Mínimo</label>
+                    <input type="number" id="stock_minimo" name="stock_minimo"
+                           class="form-control form-control-custom"
+                           value="{{ producto.stock_minimo if producto else '1' }}"
+                           min="0">
+                </div>
+
+                <!-- Ubicación -->
+                <div class="col-md-4 col-lg-4">
+                    <label class="form-label-custom" for="ubicacion">Ubicación</label>
+                    <input type="text" id="ubicacion" name="ubicacion"
+                           class="form-control form-control-custom"
+                           value="{{ producto.ubicacion if producto else '' }}"
+                           placeholder="Ej: Estante A-1">
+                </div>
+
+                <div class="col-12"><hr style="border-color: var(--border-color); opacity: 0.5;"></div>
+
+                <!-- Observaciones -->
+                <div class="col-12">
+                    <label class="form-label-custom" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones"
+                              class="form-control form-control-custom"
+                              rows="3" placeholder="Notas adicionales sobre el producto...">{{ producto.observaciones if producto else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 mt-4 flex-wrap">
+                <button type="submit" class="btn-primary-custom">
+                    <i class="bi bi-check-lg"></i>
+                    {% if accion == 'Nuevo' %}Crear Producto{% else %}Guardar Cambios{% endif %}
+                </button>
+                <a href="{% if producto %}{{ url_for('productos_bp.producto_detalle', id=producto.id) }}{% else %}{{ url_for('productos_bp.productos_lista') }}{% endif %}"
+                   class="btn-outline-custom">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var categoriaSelect = document.getElementById('categoria_id');
+    var subcategoriaSelect = document.getElementById('subcategoria_id');
+
+    // ── Category change: show/hide nueva categoría + load subcategories ──
+    categoriaSelect.addEventListener('change', function() {
+        var catId = this.value;
+
+        // Handle "nueva categoría"
+        var catContainer = document.getElementById('nueva-categoria-container');
+        var catInput = document.getElementById('nueva_categoria');
+        if (catId === 'nueva') {
+            catContainer.style.display = '';
+            catInput.focus();
+            subcategoriaSelect.innerHTML = '<option value="">— Sin subcategoría —</option><option value="nueva">+ Nueva subcategoría...</option>';
+            return;
+        } else {
+            catContainer.style.display = 'none';
+            catInput.value = '';
+        }
+
+        // Load subcategories via AJAX
+        subcategoriaSelect.innerHTML = '<option value="">— Sin subcategoría —</option>';
+        document.getElementById('nueva-subcategoria-container').style.display = 'none';
+
+        if (catId && catId !== '') {
+            fetch('/api/subcategorias/' + catId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    data.forEach(function(sub) {
+                        var opt = document.createElement('option');
+                        opt.value = sub.id;
+                        opt.textContent = sub.nombre;
+                        subcategoriaSelect.appendChild(opt);
+                    });
+                    var optNueva = document.createElement('option');
+                    optNueva.value = 'nueva';
+                    optNueva.textContent = '+ Nueva subcategoría...';
+                    subcategoriaSelect.appendChild(optNueva);
+                });
+        }
+    });
+
+    // ── Subcategory change: show/hide nueva subcategoría ──
+    subcategoriaSelect.addEventListener('change', function() {
+        var container = document.getElementById('nueva-subcategoria-container');
+        var input = document.getElementById('nueva_subcategoria');
+        if (this.value === 'nueva') {
+            container.style.display = '';
+            input.focus();
+        } else {
+            container.style.display = 'none';
+            input.value = '';
+        }
+    });
+</script>
+{% endblock %}

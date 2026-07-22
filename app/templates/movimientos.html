@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Movimientos — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1><i class="bi bi-arrow-left-right text-accent-blue"></i> Movimientos</h1>
+        <p class="subtitle">Historial de entradas y salidas de stock</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card-glass mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <span class="text-muted-custom me-1" style="font-size: 0.85rem; font-weight: 600;">FILTRAR:</span>
+            <a href="{{ url_for('movimientos_bp.movimientos_lista') }}"
+               class="{% if not tipo_filtro %}btn-primary-custom{% else %}btn-outline-custom{% endif %} btn-sm-custom">
+                Todos
+            </a>
+            <a href="{{ url_for('movimientos_bp.movimientos_lista', tipo='ENTRADA') }}"
+               class="{% if tipo_filtro == 'ENTRADA' %}btn-success-custom{% else %}btn-outline-custom{% endif %} btn-sm-custom">
+                <i class="bi bi-arrow-down-circle-fill"></i> Entradas
+            </a>
+            <a href="{{ url_for('movimientos_bp.movimientos_lista', tipo='SALIDA') }}"
+               class="{% if tipo_filtro == 'SALIDA' %}btn-warning-custom{% else %}btn-outline-custom{% endif %} btn-sm-custom">
+                <i class="bi bi-arrow-up-circle-fill"></i> Salidas
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Movements Table -->
+<div class="card-glass">
+    <div class="card-body p-0">
+        {% if movimientos.items %}
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Producto</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos.items %}
+                    <tr>
+                        <td class="text-muted-custom" style="white-space: nowrap;">
+                            {{ m.fecha.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td>
+                            <span class="mov-badge {{ m.tipo|lower }}">
+                                {% if m.tipo == 'ENTRADA' %}
+                                    <i class="bi bi-arrow-down-circle-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-arrow-up-circle-fill"></i>
+                                {% endif %}
+                                {{ m.tipo }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('productos_bp.producto_detalle', id=m.producto_id) }}"
+                               class="text-decoration-none text-accent-blue fw-600">
+                                {{ m.producto.codigo }}
+                            </a>
+                            <span class="text-muted-custom" style="font-size: 0.82rem;"> — {{ m.producto.nombre }}</span>
+                        </td>
+                        <td class="text-center">
+                            <strong>
+                                {% if m.tipo == 'ENTRADA' %}
+                                    <span class="text-accent-green">+{{ m.cantidad }}</span>
+                                {% else %}
+                                    <span class="text-accent-orange">-{{ m.cantidad }}</span>
+                                {% endif %}
+                            </strong>
+                        </td>
+                        <td class="text-muted-custom">{{ m.motivo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if movimientos.pages > 1 %}
+        <div class="d-flex justify-content-center p-3">
+            <nav>
+                <ul class="pagination pagination-custom mb-0">
+                    <li class="page-item {% if not movimientos.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('movimientos_bp.movimientos_lista', page=movimientos.prev_num, tipo=tipo_filtro) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% for page_num in movimientos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == movimientos.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('movimientos_bp.movimientos_lista', page=page_num, tipo=tipo_filtro) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not movimientos.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('movimientos_bp.movimientos_lista', page=movimientos.next_num, tipo=tipo_filtro) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+            <div class="empty-title">Sin movimientos</div>
+            <div class="empty-text">
+                {% if tipo_filtro %}
+                    No hay movimientos de tipo {{ tipo_filtro }}.
+                {% else %}
+                    Todavía no se registraron movimientos de stock.
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
