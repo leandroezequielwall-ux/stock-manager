@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, send_file
-from flask_login import login_required
+from flask_login import login_required, current_user
+from app.utils.decorators import plan_feature_required
+from app.utils.security import get_empresa_id
 from datetime import datetime
 import io
 import openpyxl
@@ -10,15 +12,16 @@ api_bp = Blueprint('api_bp', __name__)
 @api_bp.route('/subcategorias/<int:categoria_id>')
 @login_required
 def api_subcategorias(categoria_id):
-    """Return subcategories for a given category (AJAX endpoint for cascading dropdown)."""
-    subcats = Subcategoria.query.filter_by(categoria_id=categoria_id).order_by(Subcategoria.nombre).all()
+    empresa_id = get_empresa_id()
+    subcats = Subcategoria.query.filter_by(categoria_id=categoria_id, empresa_id=empresa_id).order_by(Subcategoria.nombre).all()
     return jsonify([{'id': s.id, 'nombre': s.nombre} for s in subcats])
 
 @api_bp.route('/exportar')
 @login_required
+@plan_feature_required('reportes_avanzados')
 def api_exportar():
-    """Export inventory to Excel."""
-    productos = Producto.query.order_by(Producto.nombre).all()
+    empresa_id = get_empresa_id()
+    productos = Producto.query.filter_by(empresa_id=empresa_id).order_by(Producto.nombre).all()
     
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -66,3 +69,48 @@ def api_exportar():
         download_name=f'inventario_{fecha}.xlsx', 
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
+# --- WEBHOOKS DE FACTURACIÓN (ESQUELETOS) ---
+
+from flask import request
+from app.extensions import db
+from app.models import Empresa
+
+@api_bp.route('/webhooks/stripe', methods=['POST'])
+def webhook_stripe():
+    # En producción: validar stripe_signature
+    payload = request.json
+    
+    if not payload:
+        return jsonify({'status': 'invalid payload'}), 400
+        
+    event_type = payload.get('type')
+    
+    if event_type == 'invoice.payment_succeeded':
+        # customer_id = payload['data']['object']['customer']
+        # Buscar empresa y habilitar
+        pass
+    elif event_type in ['invoice.payment_failed', 'customer.subscription.deleted']:
+        # customer_id = payload['data']['object']['customer']
+        # Buscar empresa y suspender
+        pass
+        
+    return jsonify({'status': 'success'}), 200
+
+@api_bp.route('/webhooks/mercadopago', methods=['POST'])
+def webhook_mercadopago():
+    # En producción: validar firma / x-signature
+    # MP envía notificaciones por IPN o Webhooks
+    payload = request.json
+    
+    if not payload:
+        return jsonify({'status': 'invalid payload'}), 400
+        
+    # Verificar si es un evento de subscripción "preapproval"
+    if payload.get('type') == 'subscription_preapproval':
+        # mp_preapproval_id = payload.get('data', {}).get('id')
+        # Verificar estado en API de MP ('authorized', 'cancelled', 'paused')
+        # Actualizar estado de la empresa
+        pass
+        
+    return jsonify({'status': 'success'}), 200

@@ -38,9 +38,17 @@
                         </td>
                         <td class="text-muted-custom">{{ u.email }}</td>
                         <td>
-                            {% if u.es_admin %}
+                            {% if u.rol == 'Administrador' %}
                                 <span class="mov-badge entrada">
                                     <i class="bi bi-shield-check"></i> Admin
+                                </span>
+                            {% elif u.rol == 'Supervisor' %}
+                                <span class="mov-badge" style="background: rgba(14, 165, 233, 0.1); color: #38bdf8;">
+                                    <i class="bi bi-person-gear"></i> Supervisor
+                                </span>
+                            {% elif u.rol == 'Solo Lectura' %}
+                                <span class="mov-badge" style="background: rgba(100, 116, 139, 0.1); color: #94a3b8;">
+                                    <i class="bi bi-eye"></i> Solo Lectura
                                 </span>
                             {% else %}
                                 <span class="mov-badge salida">

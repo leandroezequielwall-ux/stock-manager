@@ -9,3 +9,4 @@ class Movimiento(db.Model):
     cantidad = db.Column(db.Integer, nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     motivo = db.Column(db.String(200))
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=True, index=True)

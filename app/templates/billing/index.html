@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Facturación y Suscripción — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1><i class="bi bi-credit-card text-accent-blue"></i> Suscripción y Pagos</h1>
+    <p class="subtitle">Gestioná el plan de tu empresa, renueva tu suscripción y mejorá tu límite.</p>
+</div>
+
+{% if empresa.estado == 'Suspendida' %}
+<div class="alert-custom danger mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>¡Atención!</strong> Tu empresa se encuentra actualmente suspendida. Por favor regulariza tu pago para volver a utilizar la plataforma.
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card-glass h-100">
+            <div class="card-body">
+                <h5 class="card-title text-accent-blue mb-4">Estado Actual</h5>
+                
+                <div class="mb-3">
+                    <label class="text-muted-custom d-block mb-1">Empresa</label>
+                    <strong>{{ empresa.nombre }}</strong>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="text-muted-custom d-block mb-1">Plan Actual</label>
+                    <span class="badge bg-primary" style="font-size: 1rem;">{{ empresa.plan }}</span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-muted-custom d-block mb-1">Estado de la cuenta</label>
+                    {% if empresa.estado == 'Activa' %}
+                        <span class="badge bg-success" style="font-size: 1rem;">Activa</span>
+                    {% else %}
+                        <span class="badge bg-danger" style="font-size: 1rem;">{{ empresa.estado }}</span>
+                    {% endif %}
+                </div>
+
+                {% if empresa.payment_provider %}
+                <div class="mb-3">
+                    <label class="text-muted-custom d-block mb-1">Método de pago activo</label>
+                    <span class="text-white text-capitalize"><i class="bi bi-wallet2 me-1"></i> {{ empresa.payment_provider }}</span>
+                    <form method="POST" action="{{ url_for('billing_bp.cancelar_suscripcion') }}" class="mt-3">
+                        <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Estás seguro que deseas cancelar tu suscripción? Volverás al plan Starter.')">Cancelar Suscripción</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card-glass">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Planes Disponibles</h5>
+                
+                <div class="row g-3">
+                    <!-- Starter Plan -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark border {% if empresa.plan == 'Starter' %}border-primary{% else %}border-secondary{% endif %}">
+                            <div class="card-body text-center">
+                                <h4>Starter</h4>
+                                <h3 class="my-3 text-accent-green">Gratis</h3>
+                                <ul class="list-unstyled text-start text-muted-custom mb-4" style="font-size: 0.9rem;">
+                                    <li><i class="bi bi-check-lg text-success"></i> 2 Usuarios</li>
+                                    <li><i class="bi bi-check-lg text-success"></i> 100 Productos</li>
+                                    <li><i class="bi bi-x-lg text-danger"></i> Reportes Avanzados</li>
+                                    <li><i class="bi bi-x-lg text-danger"></i> API Access</li>
+                                </ul>
+                                {% if empresa.plan == 'Starter' %}
+                                    <button class="btn btn-secondary w-100" disabled>Plan Actual</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark border {% if empresa.plan == 'Pro' %}border-primary{% else %}border-primary{% endif %} position-relative overflow-hidden">
+                            {% if empresa.plan != 'Pro' %}
+                                <div class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1" style="font-size: 0.7rem; border-bottom-left-radius: 8px;">Recomendado</div>
+                            {% endif %}
+                            <div class="card-body text-center">
+                                <h4>Pro</h4>
+                                <h3 class="my-3 text-accent-blue">$29<small class="text-muted-custom fs-6">/mes</small></h3>
+                                <ul class="list-unstyled text-start text-muted-custom mb-4" style="font-size: 0.9rem;">
+                                    <li><i class="bi bi-check-lg text-success"></i> 10 Usuarios</li>
+                                    <li><i class="bi bi-check-lg text-success"></i> 1,500 Productos</li>
+                                    <li><i class="bi bi-check-lg text-success"></i> Reportes Avanzados</li>
+                                    <li><i class="bi bi-x-lg text-danger"></i> API Access</li>
+                                </ul>
+                                
+                                {% if empresa.plan == 'Pro' %}
+                                    <button class="btn btn-secondary w-100" disabled>Plan Actual</button>
+                                {% else %}
+                                    <div class="d-flex flex-column gap-2">
+                                        <form method="POST" action="{{ url_for('billing_bp.checkout_mercadopago') }}">
+                                            <input type="hidden" name="plan" value="Pro">
+                                            <button type="submit" class="btn btn-primary w-100" style="background-color: #009ee3; border-color: #009ee3;">
+                                                <i class="bi bi-bag-check"></i> Pagar con Mercado Pago
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('billing_bp.checkout_stripe') }}">
+                                            <input type="hidden" name="plan" value="Pro">
+                                            <button type="submit" class="btn btn-primary w-100" style="background-color: #635bff; border-color: #635bff;">
+                                                <i class="bi bi-credit-card"></i> Pagar con Tarjeta (Stripe)
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

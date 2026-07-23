@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Panel Administrativo Global{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h1><i class="bi bi-globe text-accent-blue"></i> Panel Global (SuperAdmin)</h1>
+        <p class="subtitle">Gestión maestra de empresas inquilinas del SaaS.</p>
+    </div>
+</div>
+
+<div class="card-glass">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Empresa</th>
+                        <th>Plan</th>
+                        <th>Estado</th>
+                        <th>Usuarios</th>
+                        <th>Productos</th>
+                        <th>Espacio (docs)</th>
+                        <th>Último Acceso</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for empresa in empresas %}
+                    <tr>
+                        <td><span class="text-muted-custom">#{{ empresa.id }}</span></td>
+                        <td>
+                            <div class="fw-bold">{{ empresa.nombre }}</div>
+                            <small class="text-muted-custom">{{ empresa.email or 'Sin email' }}</small>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('superadmin_bp.empresa_plan', id=empresa.id) }}" method="POST" class="d-inline">
+                                <select name="plan" class="form-select form-select-sm bg-transparent text-light border-secondary" onchange="this.form.submit()">
+                                    <option value="Starter" {% if empresa.plan == 'Starter' or empresa.plan == 'Free' %}selected{% endif %}>Starter</option>
+                                    <option value="Pro" {% if empresa.plan == 'Pro' %}selected{% endif %}>Pro</option>
+                                    <option value="Enterprise" {% if empresa.plan == 'Enterprise' %}selected{% endif %}>Enterprise</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('superadmin_bp.empresa_estado', id=empresa.id) }}" method="POST" class="d-inline">
+                                <select name="estado" class="form-select form-select-sm bg-transparent border-secondary 
+                                    {% if empresa.estado == 'Activa' %}text-success{% else %}text-danger{% endif %}" 
+                                    onchange="this.form.submit()">
+                                    <option value="Activa" {% if empresa.estado == 'Activa' %}selected{% endif %} class="text-dark">Activa</option>
+                                    <option value="Suspendida" {% if empresa.estado == 'Suspendida' %}selected{% endif %} class="text-dark">Suspendida</option>
+                                </select>
+                            </form>
+                        </td>
+                        <td>{{ metricas[empresa.id]['usuarios'] }}</td>
+                        <td>{{ metricas[empresa.id]['productos'] }}</td>
+                        <td>{{ metricas[empresa.id]['espacio'] }}</td>
+                        <td>
+                            {% if metricas[empresa.id]['ultimo_acceso'] %}
+                                {{ metricas[empresa.id]['ultimo_acceso'].strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                                <span class="text-muted-custom">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <form action="{{ url_for('superadmin_bp.empresa_eliminar', id=empresa.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¡PELIGRO! ¿Estás seguro de eliminar {{ empresa.nombre }}? Esto borrará en cascada todos sus usuarios, productos y movimientos para siempre.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar definitivamente">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="bi bi-building text-muted fs-1 d-block mb-3"></i>
+                            No hay empresas registradas en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

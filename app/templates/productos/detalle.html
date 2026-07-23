@@ -16,10 +16,10 @@
         <p class="subtitle">{{ producto.nombre }}{% if producto.categoria %} — {{ producto.categoria.nombre }}{% endif %}</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        {% if current_user.rol in ['Administrador', 'Supervisor'] %}
         <a href="{{ url_for('productos_bp.producto_editar', id=producto.id) }}" class="btn-primary-custom">
             <i class="bi bi-pencil"></i> Editar
         </a>
-        {% if current_user.es_admin %}
         <button type="button" class="btn-danger-custom" data-bs-toggle="modal" data-bs-target="#modalEliminar">
             <i class="bi bi-trash3"></i> Eliminar
         </button>
@@ -128,6 +128,7 @@
 </div>
 
 <!-- Stock Movement Forms -->
+{% if current_user.rol != 'Solo Lectura' %}
 <div class="row g-4 mb-4">
     <!-- Entrada -->
     <div class="col-md-6">
@@ -183,6 +184,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- Movement History -->
 <div class="card-glass">

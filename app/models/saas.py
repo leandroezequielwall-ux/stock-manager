@@ -16,25 +16,6 @@ class Plan(db.Model):
     # Relación uno-a-muchos con Suscripcion
     suscripciones = db.relationship('Suscripcion', backref='plan', lazy=True)
 
-class Empresa(db.Model):
-    """
-    Modelo principal del Tenant (Empresa o Cliente SaaS).
-    """
-    __tablename__ = 'empresas'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    razon_social = db.Column(db.String(150), nullable=False)
-    cuit = db.Column(db.String(20), unique=True, nullable=True)
-    email_contacto = db.Column(db.String(120), nullable=True)
-    fecha_alta = db.Column(db.DateTime, default=datetime.utcnow)
-    activa = db.Column(db.Boolean, default=True)
-    
-    # Relación uno-a-muchos con Suscripcion
-    suscripciones = db.relationship('Suscripcion', backref='empresa', lazy=True)
-    # Relación uno-a-muchos con Licencias
-    licencias = db.relationship('Licencia', backref='empresa', lazy=True)
-    # Relación uno-a-muchos con Backups
-    backups = db.relationship('Backup', backref='empresa', lazy=True)
 
 class Suscripcion(db.Model):
     """

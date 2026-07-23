@@ -1,8 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
+from app.utils.security import get_empresa_id
 from app.extensions import db
 from app.models import Producto, Movimiento
 from app.services.stock_service import registrar_movimiento
+from app.utils.decorators import role_required
+from app.utils.auditoria import log_auditoria
 
 movimientos_bp = Blueprint('movimientos_bp', __name__)
 
@@ -13,7 +16,8 @@ def movimientos_lista():
     tipo_filtro = request.args.get('tipo', '').strip().upper()
     per_page = 30
 
-    query = Movimiento.query
+    empresa_id = get_empresa_id()
+    query = Movimiento.query.filter_by(empresa_id=empresa_id)
 
     if tipo_filtro in ['ENTRADA', 'SALIDA']:
         query = query.filter(Movimiento.tipo == tipo_filtro)
@@ -26,8 +30,10 @@ def movimientos_lista():
 
 @movimientos_bp.route('/productos/<int:id>/entrada', methods=['POST'])
 @login_required
+@role_required('Administrador', 'Supervisor', 'Operador')
 def stock_entrada(id):
-    producto = Producto.query.get_or_404(id)
+    empresa_id = get_empresa_id()
+    producto = Producto.query.filter_by(id=id, empresa_id=empresa_id).first_or_404()
     cantidad = request.form.get('cantidad', type=int)
     motivo = request.form.get('motivo', 'Entrada de stock').strip()
 
@@ -37,6 +43,7 @@ def stock_entrada(id):
 
     try:
         registrar_movimiento(producto, 'ENTRADA', cantidad, motivo)
+        log_auditoria('CREAR', 'movimientos', None, {'producto_id': producto.id, 'tipo': 'ENTRADA', 'cantidad': cantidad})
         flash(f'Entrada registrada: +{cantidad} unidades de {producto.codigo}.', 'success')
     except Exception as e:
         flash(f'Error al registrar entrada: {e}', 'danger')
@@ -45,8 +52,10 @@ def stock_entrada(id):
 
 @movimientos_bp.route('/productos/<int:id>/salida', methods=['POST'])
 @login_required
+@role_required('Administrador', 'Supervisor', 'Operador')
 def stock_salida(id):
-    producto = Producto.query.get_or_404(id)
+    empresa_id = get_empresa_id()
+    producto = Producto.query.filter_by(id=id, empresa_id=empresa_id).first_or_404()
     cantidad = request.form.get('cantidad', type=int)
     motivo = request.form.get('motivo', 'Salida de stock').strip()
 
@@ -60,6 +69,7 @@ def stock_salida(id):
 
     try:
         registrar_movimiento(producto, 'SALIDA', cantidad, motivo)
+        log_auditoria('CREAR', 'movimientos', None, {'producto_id': producto.id, 'tipo': 'SALIDA', 'cantidad': cantidad})
         flash(f'Salida registrada: -{cantidad} unidades de {producto.codigo}.', 'success')
         
         # Alert if stock is low after sale

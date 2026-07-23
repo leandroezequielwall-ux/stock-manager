@@ -4,8 +4,8 @@ from datetime import datetime
 class Producto(db.Model):
     __tablename__ = 'productos'
     id = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(50), unique=True, nullable=False, index=True)
-    codigo_barras = db.Column(db.String(50), unique=True, index=True)
+    codigo = db.Column(db.String(50), nullable=False, index=True)
+    codigo_barras = db.Column(db.String(50), index=True)
     nombre = db.Column(db.String(200), nullable=False)
     descripcion = db.Column(db.Text)
     marca = db.Column(db.String(100))
@@ -21,9 +21,15 @@ class Producto(db.Model):
     observaciones = db.Column(db.Text)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=True, index=True)
 
     # Relationships
     movimientos = db.relationship('Movimiento', backref='producto', lazy='dynamic', cascade='all, delete-orphan')
+
+    __table_args__ = (
+        db.UniqueConstraint('codigo', 'empresa_id', name='uix_producto_codigo_empresa'),
+        db.UniqueConstraint('codigo_barras', 'empresa_id', name='uix_producto_codigo_barras_empresa'),
+    )
 
     @property
     def ganancia(self):

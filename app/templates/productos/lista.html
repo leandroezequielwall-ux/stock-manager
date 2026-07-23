@@ -8,12 +8,21 @@
         <p class="subtitle">{{ productos.total }} producto{{ 's' if productos.total != 1 else '' }} en el inventario</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        {% if tiene_reportes %}
         <a href="{{ url_for('api_bp.api_exportar') }}" class="btn-outline-custom" target="_blank" download="inventario.xlsx">
             <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
         </a>
+        {% else %}
+        <button class="btn-outline-custom" disabled title="Mejora tu plan para habilitar exportaciones" style="opacity: 0.5; cursor: not-allowed;">
+            <i class="bi bi-file-earmark-excel"></i> Exportar a Excel <i class="bi bi-lock-fill ms-1" style="font-size: 0.8rem;"></i>
+        </button>
+        {% endif %}
+        
+        {% if current_user.rol in ['Administrador', 'Supervisor'] %}
         <a href="{{ url_for('productos_bp.producto_nuevo') }}" class="btn-primary-custom">
             <i class="bi bi-plus-lg"></i> Nuevo Producto
         </a>
+        {% endif %}
     </div>
 </div>
 
@@ -98,10 +107,12 @@
                                    class="btn-outline-custom btn-sm-custom" title="Ver detalle">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% if current_user.rol in ['Administrador', 'Supervisor'] %}
                                 <a href="{{ url_for('productos_bp.producto_editar', id=p.id) }}"
                                    class="btn-outline-custom btn-sm-custom" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -159,9 +170,11 @@
                 {% endif %}
             </div>
             {% if not busqueda %}
+            {% if current_user.rol in ['Administrador', 'Supervisor'] %}
             <a href="{{ url_for('productos_bp.producto_nuevo') }}" class="btn-primary-custom mt-3">
                 <i class="bi bi-plus-lg"></i> Agregar Producto
             </a>
+            {% endif %}
             {% endif %}
         </div>
         {% endif %}

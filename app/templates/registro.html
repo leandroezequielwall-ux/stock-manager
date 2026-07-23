@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión — Stock Manager</title>
+    <title>Registro — Stock Manager</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@
 
         .login-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 500px;
             position: relative;
             z-index: 1;
         }
@@ -95,6 +95,17 @@
             color: var(--text-muted);
             font-size: 0.8rem;
         }
+
+        .login-footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .login-footer a:hover {
+            color: var(--accent-teal);
+        }
     </style>
 </head>
 <body>
@@ -102,10 +113,10 @@
         <div class="login-card fade-in">
             <div class="login-header">
                 <div class="brand-logo">
-                    <i class="bi bi-gear-wide-connected"></i>
+                    <i class="bi bi-rocket-takeoff"></i>
                 </div>
-                <h1>Stock Manager</h1>
-                <p>Sistema de Gestión de Stock</p>
+                <h1>Crea tu cuenta</h1>
+                <p>Registra tu empresa y comienza a gestionar tu stock</p>
             </div>
 
             <!-- Flash Messages -->
@@ -128,39 +139,72 @@
 
             <div class="card-glass">
                 <div class="card-body p-4">
-                    <form method="POST" class="login-form" id="login-form">
-                        <div class="mb-3">
-                            <label class="form-label-custom" for="email">Usuario / Email</label>
-                            <div class="search-container">
-                                <i class="bi bi-person search-icon"></i>
-                                <input type="text" id="email" name="email"
-                                       class="form-control form-control-custom"
-                                       placeholder="Ingresá tu usuario"
-                                       required autofocus autocomplete="username">
+                    <form method="POST" class="login-form" id="registro-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom" for="nombre_empresa">Nombre Empresa</label>
+                                <div class="search-container">
+                                    <i class="bi bi-building search-icon"></i>
+                                    <input type="text" id="nombre_empresa" name="nombre_empresa"
+                                           class="form-control form-control-custom"
+                                           placeholder="Tu empresa..."
+                                           required autofocus autocomplete="organization">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom" for="cuit">CUIT (Opcional)</label>
+                                <div class="search-container">
+                                    <i class="bi bi-card-text search-icon"></i>
+                                    <input type="text" id="cuit" name="cuit"
+                                           class="form-control form-control-custom"
+                                           placeholder="12-34567890-1">
+                                </div>
                             </div>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label-custom" for="email">Correo Electrónico (Admin)</label>
+                            <div class="search-container">
+                                <i class="bi bi-envelope search-icon"></i>
+                                <input type="email" id="email" name="email"
+                                       class="form-control form-control-custom"
+                                       placeholder="admin@empresa.com"
+                                       required autocomplete="email">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label-custom" for="password">Contraseña</label>
                             <div class="search-container">
                                 <i class="bi bi-lock search-icon"></i>
                                 <input type="password" id="password" name="password"
                                        class="form-control form-control-custom"
-                                       placeholder="Ingresá tu contraseña"
-                                       required autocomplete="current-password">
+                                       placeholder="Crea una contraseña segura"
+                                       required autocomplete="new-password">
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary-custom login-btn">
-                            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+
+                        <div class="mb-3">
+                            <label class="form-label-custom" for="plan">Plan Inicial</label>
+                            <div class="search-container">
+                                <i class="bi bi-star search-icon"></i>
+                                <select id="plan" name="plan" class="form-control form-control-custom" required style="appearance: none; padding-left: 2.5rem;">
+                                    <option value="Starter">Plan Starter - $0/mes</option>
+                                    <option value="Pro">Plan Pro - $19/mes</option>
+                                    <option value="Enterprise">Plan Enterprise - $49/mes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary-custom login-btn mt-3">
+                            <i class="bi bi-rocket"></i> Completar Registro
                         </button>
                     </form>
                 </div>
             </div>
 
             <div class="login-footer">
-                <div class="mb-2">
-                    ¿No tienes una cuenta? <a href="{{ url_for('auth_bp.registro') }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 500;">Registra tu empresa aquí</a>
-                </div>
-                <i class="bi bi-shield-lock"></i> Acceso restringido a usuarios autorizados
+                ¿Ya tienes una cuenta? <a href="{{ url_for('auth_bp.login') }}">Inicia sesión aquí</a>
             </div>
         </div>
     </div>

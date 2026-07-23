@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Auditoría — Stock Manager{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1><i class="bi bi-shield-check text-accent-teal"></i> Registro de Auditoría</h1>
+    <p class="subtitle">Historial de acciones y eventos de seguridad en la empresa.</p>
+</div>
+
+<div class="card-glass">
+    <div class="card-body p-0">
+        {% if logs.items %}
+        <div class="table-responsive-custom">
+            <table class="table-dark-custom" id="tabla-auditoria">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>IP</th>
+                        <th>Acción</th>
+                        <th>Módulo</th>
+                        <th>ID Reg.</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td class="text-nowrap">{{ log.fecha.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                        <td>
+                            {% if log.usuario %}
+                                <strong>{{ log.usuario.nombre }}</strong> <br>
+                                <small class="text-muted-custom">{{ log.usuario.email }}</small>
+                            {% else %}
+                                <em>Sistema / Eliminado</em>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ log.ip_address or 'Desconocida' }}</span></td>
+                        <td>
+                            {% if log.accion == 'CREAR' %}
+                                <span class="badge bg-success">CREAR</span>
+                            {% elif log.accion == 'EDITAR' %}
+                                <span class="badge bg-primary">EDITAR</span>
+                            {% elif log.accion == 'ELIMINAR' %}
+                                <span class="badge bg-danger">ELIMINAR</span>
+                            {% elif log.accion == 'LOGIN' %}
+                                <span class="badge bg-info text-dark">LOGIN</span>
+                            {% elif log.accion == 'LOGOUT' %}
+                                <span class="badge bg-secondary">LOGOUT</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ log.accion }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.tabla }}</td>
+                        <td>{{ log.registro_id or '—' }}</td>
+                        <td>
+                            <div style="max-width: 300px; max-height: 80px; overflow-y: auto; font-size: 0.8rem; font-family: monospace;" class="text-muted-custom">
+                                {% if log.detalles_dict %}
+                                    {% for key, value in log.detalles_dict.items() %}
+                                        <div><strong>{{ key }}:</strong> {{ value }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if logs.pages > 1 %}
+        <div class="d-flex justify-content-center p-3">
+            <nav>
+                <ul class="pagination pagination-custom mb-0">
+                    <li class="page-item {% if not logs.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('auditoria_bp.auditoria_lista', page=logs.prev_num) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('auditoria_bp.auditoria_lista', page=page_num) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not logs.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('auditoria_bp.auditoria_lista', page=logs.next_num) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-shield-slash"></i></div>
+            <div class="empty-title">No hay registros de auditoría</div>
+            <div class="empty-text">Aún no se ha registrado ninguna actividad en el sistema para tu empresa.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

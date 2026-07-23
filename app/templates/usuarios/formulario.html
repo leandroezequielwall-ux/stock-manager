@@ -42,11 +42,17 @@
                 <div class="col-md-6">
                     <label class="form-label-custom" for="rol">Rol *</label>
                     <select id="rol" name="rol" class="form-control form-select-custom">
-                        <option value="operador" {% if usuario and usuario.rol == 'operador' %}selected{% endif %}>
-                            Operador — Puede ver y mover stock
+                        <option value="Administrador" {% if usuario and usuario.rol == 'Administrador' %}selected{% endif %}>
+                            Administrador — Acceso total
                         </option>
-                        <option value="admin" {% if usuario and usuario.rol == 'admin' %}selected{% endif %}>
-                            Admin — Acceso total
+                        <option value="Supervisor" {% if usuario and usuario.rol == 'Supervisor' %}selected{% endif %}>
+                            Supervisor — Gestión de productos y categorías
+                        </option>
+                        <option value="Operador" {% if not usuario or usuario.rol == 'Operador' %}selected{% endif %}>
+                            Operador — Entradas y salidas de stock
+                        </option>
+                        <option value="Solo Lectura" {% if usuario and usuario.rol == 'Solo Lectura' %}selected{% endif %}>
+                            Solo Lectura — Visualización únicamente
                         </option>
                     </select>
                 </div>
@@ -82,9 +88,11 @@
             <div class="alert-custom info mt-4" style="animation: none;">
                 <i class="bi bi-info-circle-fill"></i>
                 <div>
-                    <strong>Roles:</strong>
-                    <strong>Admin</strong> = acceso total (productos, usuarios, eliminar).
-                    <strong>Operador</strong> = ver productos, registrar entradas y salidas.
+                    <strong>Roles:</strong><br>
+                    - <strong>Administrador:</strong> Acceso total (usuarios, productos, configuraciones).<br>
+                    - <strong>Supervisor:</strong> Crear/editar productos y categorías. No administra usuarios.<br>
+                    - <strong>Operador:</strong> Ver productos y registrar movimientos de stock.<br>
+                    - <strong>Solo Lectura:</strong> Acceso únicamente para visualizar información.
                 </div>
             </div>
 
