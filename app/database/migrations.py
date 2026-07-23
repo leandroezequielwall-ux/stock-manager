@@ -4,7 +4,11 @@ from app.extensions import db
 from app.config import Config
 
 def migrate_database():
-    """Migrate from automotive-specific schema to generic schema if needed."""
+    # No ejecutar esta migración si estamos usando PostgreSQL
+    if Config.SQLALCHEMY_DATABASE_URI.startswith("postgres"):
+        return
+
+    # Migrate from automotive-specific schema to generic schema if needed.
     if not os.path.exists(Config.DB_PATH):
         return
 
