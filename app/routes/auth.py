@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user
-from werkzeug.security import check_password_hash
+from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash
 from datetime import datetime
 from app.extensions import db
@@ -12,33 +11,45 @@ auth_bp = Blueprint('auth_bp', __name__)
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email', '').strip()
         password = request.form.get('password')
-        
+
         user = Usuario.query.filter_by(email=email).first()
         if user and user.check_password(password):
             if not user.activo:
                 flash('Esta cuenta ha sido desactivada.', 'danger')
                 return redirect(url_for('auth_bp.login'))
-                
+
+            if not user.empresa_id and user.rol != 'SuperAdmin':
+                flash('Tu cuenta no tiene una empresa asignada. Contactá a soporte.', 'danger')
+                return redirect(url_for('auth_bp.login'))
+
             user.ultimo_login = datetime.utcnow()
             db.session.commit()
-            
+
             login_user(user)
             log_auditoria('LOGIN', 'usuarios', user.id, 'Inicio de sesión exitoso')
             return redirect(url_for('dashboard_bp.dashboard'))
         else:
             flash('Email o contraseña incorrectos.', 'danger')
-            
+
     return render_template('login.html')
 
 
 @auth_bp.route('/logout')
 def logout():
     if current_user.is_authenticated:
-        log_auditoria('LOGOUT', 'usuarios', current_user.id, 'Cierre de sesión')
+        log_auditoria(
+            'LOGOUT',
+            'usuarios',
+            current_user.id,
+            'Cierre de sesión'
+        )
+
     logout_user()
+    flash('Sesión cerrada correctamente.', 'success')
     return redirect(url_for('auth_bp.login'))
+
 
 @auth_bp.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -67,7 +78,7 @@ def registro():
                 plan=plan
             )
             db.session.add(empresa)
-            db.session.flush() # Para obtener el ID de la empresa
+            db.session.flush()  # Para obtener el ID de la empresa
 
             # 2. Crear Usuario Administrador
             admin = Usuario(
@@ -92,11 +103,11 @@ def registro():
             # Auto-login
             admin.ultimo_login = datetime.utcnow()
             db.session.commit()
-            
+
             login_user(admin)
             log_auditoria('CREAR', 'empresas', empresa.id, f'Empresa registrada: {empresa.nombre}')
             log_auditoria('LOGIN', 'usuarios', admin.id, 'Inicio de sesión (Registro)')
-            
+
             flash('¡Registro exitoso! Bienvenido a Stock Manager.', 'success')
             return redirect(url_for('dashboard_bp.dashboard'))
 
@@ -106,4 +117,3 @@ def registro():
             return redirect(url_for('auth_bp.registro'))
 
     return render_template('registro.html')
-
